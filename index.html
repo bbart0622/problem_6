@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>퀴즈 웹사이트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .quiz-container {
+            width: 80%;
+            max-width: 800px;
+            text-align: center;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .question {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        img {
+            max-width: 100%;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .option {
+            padding: 15px;
+            background-color: #e0e0e0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .option:hover {
+            background-color: #d0d0d0;
+        }
+        .option img {
+            max-width: 100%;
+            border-radius: 4px;
+            transition: transform 0.3s ease;
+        }
+        .option img:hover {
+            transform: scale(1.05);
+        }
+        .feedback {
+            font-size: 20px;
+            margin-top: 20px;
+        }
+        .feedback.correct {
+            color: green;
+        }
+        .feedback.incorrect {
+            color: red;
+        }
+        .countdown {
+            font-size: 18px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <div class="question" id="question">문제를 불러오는 중...</div>
+        <img id="quiz-image" src="" alt="문제 이미지">
+        <div class="options" id="options">
+            <!-- 선택지가 동적으로 추가됩니다 -->
+        </div>
+        <div class="feedback" id="feedback"></div>
+        <div class="countdown" id="countdown"></div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "주어진 상황에 대하여 H 학생이 위반한 저작권 표시가 무엇일까요?",
+                image: "img 22.png",
+                options: ["img 21.png", "img 20.png"],
+                answer: "img 21.png",
+                type: "image"
+            },
+            {
+                question: "H 학생의 포스터가 근처 카페에서 상업적 목적으로 사용되었을 때, 누가 저작권 위반에 대한 책임을 질까요?",
+                image: "img 23.png",
+                options: ["포스터를 상업적으로 사용한 카페 사장님이 책임을 진다.", "포스터를 제작한 H 학생이 책임을 진다."],
+                answer: "포스터를 상업적으로 사용한 카페 사장님이 책임을 진다.",
+                type: "text"
+            },
+            {
+                question: "H 학생이 포스터를 SNS에 올리면서 내가 만든 포스터라는 설명을 붙이고 저작자 표시를 하지 않은 것에 대해 어떤 문제가 발생할까요?",
+                options: ["저작자 표시를 하지 않으면 원작자의 권리를 침해한 것이므로 저작권 위반이다.", "H 학생이 직접 만든 포스터 이기 때문에 저작권은 H 학생에게 있다."],
+                answer: "저작자 표시를 하지 않으면 원작자의 권리를 침해한 것이므로 저작권 위반이다.",
+                type: "text"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+
+        const questionElement = document.getElementById("question");
+        const optionsElement = document.getElementById("options");
+        const feedbackElement = document.getElementById("feedback");
+        const countdownElement = document.getElementById("countdown");
+        const imageElement = document.getElementById("quiz-image");
+
+        function loadQuestion() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionElement.textContent = currentQuestion.question;
+            imageElement.src = currentQuestion.image || "";
+            imageElement.style.display = currentQuestion.image ? "block" : "none";
+
+            optionsElement.innerHTML = "";
+            feedbackElement.textContent = "";
+            feedbackElement.className = "feedback";
+            countdownElement.textContent = "";
+
+            if (currentQuestion.type === "image") {
+                currentQuestion.options.forEach(optionImage => {
+                    const button = document.createElement("button");
+                    button.classList.add("option");
+
+                    // 이미지 추가
+                    const img = document.createElement("img");
+                    img.src = optionImage;
+                    img.alt = "선택지 이미지";
+
+                    button.appendChild(img);
+                    button.addEventListener("click", () => checkAnswer(optionImage));
+                    optionsElement.appendChild(button);
+                });
+            } else {
+                currentQuestion.options.forEach(optionText => {
+                    const button = document.createElement("button");
+                    button.classList.add("option");
+                    button.textContent = optionText;
+                    button.addEventListener("click", () => checkAnswer(optionText));
+                    optionsElement.appendChild(button);
+                });
+            }
+        }
+
+        function checkAnswer(selectedOption) {
+            const currentQuestion = quizData[currentQuestionIndex];
+
+            feedbackElement.className = "feedback";
+
+            if (selectedOption === currentQuestion.answer) {
+                feedbackElement.textContent = "정답입니다!";
+                feedbackElement.classList.add("correct");
+                let countdown = 5;
+                countdownElement.textContent = `다음 문제로 넘어갑니다: ${countdown}`;
+
+                const countdownInterval = setInterval(() => {
+                    countdown--;
+                    countdownElement.textContent = `다음 문제로 넘어갑니다: ${countdown}`;
+                    if (countdown === 0) {
+                        clearInterval(countdownInterval);
+                        currentQuestionIndex++;
+                        if (currentQuestionIndex < quizData.length) {
+                            loadQuestion();
+                        } else {
+                            alert("모든 문제를 완료했습니다!");
+                        }
+                    }
+                }, 1000);
+            } else {
+                feedbackElement.textContent = "오답입니다! 다시 시도해보세요.";
+                feedbackElement.classList.add("incorrect");
+            }
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>
